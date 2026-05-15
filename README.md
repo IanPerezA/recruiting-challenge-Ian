@@ -13,7 +13,7 @@ We care less about *whether* you finish than *how* you decide what to do. Read [
 3. **Identify and address at least 3 quality issues.** Treat this codebase the way you'd treat a real production system that just landed on your desk: things that work but shouldn't, things that are missing, things whose shape could be better, things that won't scale, things that aren't safe. Some are easy to spot, some take more reading. We don't tell you in advance which ones — surfacing them is part of the exercise. **The entire codebase, docs, and API surface are fair game.** You decide what's worth improving and why.
 4. **Pick one feature from the menu below and add it.** You choose. Tell us why you chose it.
 5. **Improve the documentation** as you go. The `docs/` directory is out of date and incomplete; treat it as part of the codebase.
-6. **Submit** the four artifacts described in [`SUBMISSION.md`](./SUBMISSION.md).
+6. **Submit** the six artifacts described in [`SUBMISSION.md`](./SUBMISSION.md). Some of them must be written by you, without AI — read [`SUBMISSION.md`](./SUBMISSION.md) before you start.
 
 **Expected time: ~6 hours.** If you spend a lot more or a lot less, write down why in your decision log — we'll read it.
 
@@ -66,12 +66,16 @@ You can sketch a fourth option if none of these fit your strengths — just be v
 
 ## What you submit
 
-See [`SUBMISSION.md`](./SUBMISSION.md). In short, four files:
+See [`SUBMISSION.md`](./SUBMISSION.md). In short, **six artifacts**:
 
-1. **A link to your fork** with your work merged or in a clear branch.
-2. **`decision_log.md`** — one page on what you chose to do and why.
-3. **`prompt_history.md`** — raw history of your prompts to whatever AI tool(s) you used.
-4. **`written_answers.md`** — three short past-tense behavioral questions (templates included).
+1. **A link to your fork** with your work merged or in a clearly named branch — with multiple commits, **human-written commit messages**, not one giant squash.
+2. **`decision_log.md`** — **human-written.** Two pages on what you chose to do, your confidence per fix, where you disagreed with the AI, and where you felt uncertain.
+3. **`validation_design.md`** — **human-written.** ~300 words on the gates you built (or would build) to catch the *class* of bug, not just the instance.
+4. **`signoff.md`** — **human-written.** One line per meaningful commit: what you read, what you trusted, what you took on faith.
+5. **`prompt_history.md`** — raw AI conversation transcript. No curation. Includes a mandatory "what Claude got wrong" section.
+6. **`written_answers.md`** — **human-written.** Three past-tense behavioral questions.
+
+Templates for each are in the repo root (`*.template.md`). Each human-written artifact opens with a one-line authorship declaration. **Mislabeling — claiming "no AI" on a doc that's clearly AI-generated — is treated as evidence of dishonesty.**
 
 Email your submission to the recruiter you've been talking to. They'll get back to you within a week.
 
@@ -79,9 +83,11 @@ Email your submission to the recruiter you've been talking to. They'll get back 
 
 ## A note on AI
 
-You should use AI. Claude Code, Cursor, Copilot, Aider, ChatGPT — whatever you actually work with. We are not testing whether you can write code without help. We are testing how you direct, review, and decide. That's what we look at in your prompt history and your decision log.
+You should use AI on the code. Claude Code, Cursor, Copilot, Aider, ChatGPT — whatever you actually work with. We are not testing whether you can write code without help. We are testing how you direct, review, and decide. The prompt history is where that signal lives.
 
-You do not need to "perform AI use" — if you only used it for one thing, write that one thing. If you used it for everything, write what you accepted, what you rejected, and what you had to re-prompt to fix.
+**But the written deliverables are different.** `decision_log.md`, `validation_design.md`, `signoff.md`, `written_answers.md`, and your commit messages must be **written by you, without AI**. Spell-check is fine. AI-laundered written deliverables are an automatic decline — see [`SUBMISSION.md`](./SUBMISSION.md) for the full table and why we draw the line there.
+
+You do not need to "perform AI use" on the code side — if you only used it for one thing, write that one thing. If you used it for everything, write what you accepted, what you rejected, and what you had to re-prompt to fix. The mandatory "what Claude got wrong" section in `prompt_history.md` is where you show critical review.
 
 ---
 
