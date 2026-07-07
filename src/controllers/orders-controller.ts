@@ -21,7 +21,7 @@ export const ordersController = {
       res.status(404).json({ error: 'not_found' });
       return;
     }
-    const order = ordersService.getOrder(id);
+    const order = ordersService.getOrder(id, req.merchantId!);
     if (!order) {
       res.status(404).json({ error: 'not_found' });
       return;

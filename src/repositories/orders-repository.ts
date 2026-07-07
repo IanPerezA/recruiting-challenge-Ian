@@ -26,8 +26,15 @@ export const ordersRepository = {
       .all(merchantId, limit) as OrderRow[];
   },
 
-  getById(id: string): OrderRow | undefined {
-    return db.prepare(`SELECT * FROM orders WHERE id = ?`).get(id) as OrderRow | undefined;
+  /**
+   * Look up a single order scoped to its owning merchant. Tenancy is part of the
+   * signature on purpose: there is no way to read an order without proving which
+   * merchant is asking, so a cross-tenant read (IDOR) cannot compile.
+   */
+  findById(id: string, merchantId: string): OrderRow | undefined {
+    return db
+      .prepare(`SELECT * FROM orders WHERE id = ? AND merchant_id = ?`)
+      .get(id, merchantId) as OrderRow | undefined;
   },
 
   create(order: NewOrder): OrderRow {
@@ -35,7 +42,7 @@ export const ordersRepository = {
       `INSERT INTO orders (id, merchant_id, customer_email, total_amount, type, status)
        VALUES (?, ?, ?, ?, ?, ?)`,
     ).run(order.id, order.merchant_id, order.customer_email, order.total_amount, order.type, order.status);
-    return this.getById(order.id)!;
+    return this.findById(order.id, order.merchant_id)!;
   },
 
   /**

@@ -11,8 +11,8 @@ export const ordersService = {
     return ordersRepository.listByMerchant(merchantId, opts);
   },
 
-  getOrder(id: string): OrderRow | undefined {
-    return ordersRepository.getById(id);
+  getOrder(id: string, merchantId: string): OrderRow | undefined {
+    return ordersRepository.findById(id, merchantId);
   },
 
   createOrder(input: {

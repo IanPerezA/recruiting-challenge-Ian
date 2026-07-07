@@ -26,5 +26,5 @@ I USED AI Just for create this file in my local project and set the structure pr
 ## Sign-offs
 
 ✅- `<sha>` — I just created files for submition
-- `<sha>` —
+✖️ - `<sha>` — I have not read claude generated code cause i only check de API still running and check de new folders distribution
 - `<sha>` —

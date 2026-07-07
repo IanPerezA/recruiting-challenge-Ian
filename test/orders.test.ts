@@ -34,6 +34,25 @@ test('orders repository: getById returns the order', () => {
     type: 'sale',
     status: 'completed',
   });
-  const got = ordersRepository.getById('o2');
+  const got = ordersRepository.findById('o2', 'm_test');
   assert.equal(got?.total_amount, 1200);
+});
+
+test('orders repository: findById is tenant-scoped (no cross-merchant read / IDOR)', () => {
+  initSchema();
+  db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_owner', 'Owner')`).run();
+  db.prepare(`INSERT OR IGNORE INTO merchants (id, name) VALUES ('m_attacker', 'Attacker')`).run();
+  ordersRepository.create({
+    id: 'o_secret',
+    merchant_id: 'm_owner',
+    customer_email: 'owner@b.com',
+    total_amount: 9900,
+    type: 'sale',
+    status: 'completed',
+  });
+
+  // The owning merchant can read it.
+  assert.equal(ordersRepository.findById('o_secret', 'm_owner')?.id, 'o_secret');
+  // A different merchant asking for the same id gets nothing (no leak).
+  assert.equal(ordersRepository.findById('o_secret', 'm_attacker'), undefined);
 });

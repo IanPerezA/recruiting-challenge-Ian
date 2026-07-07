@@ -11,7 +11,8 @@ No auth. Returns `{ ok: true }`.
 List orders for the authenticated merchant. Optional query: `from`, `to`, `limit`.
 
 ## `GET /api/orders/:id`
-Get a single order by ID.
+Get a single order by ID, **scoped to the authenticated merchant**. Returns `404 not_found`
+if the order does not exist *or* belongs to another merchant (no cross-tenant reads).
 
 ## `POST /api/orders`
 Body: `{ customer_email, total_amount, type? }`.
