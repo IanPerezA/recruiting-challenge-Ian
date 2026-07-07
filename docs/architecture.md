@@ -5,15 +5,27 @@
 
 ## Modules
 
-- **`server.ts`** — Express bootstrapper. Wires routers to paths.
+The HTTP path flows through explicit layers: **route → middleware → controller →
+service → repository → (db)**. Each layer only knows about the one below it.
+
+- **`server.ts`** — Express bootstrapper. Wires routers to paths and mounts auth +
+  the terminal error handler.
 - **`db.ts`** — SQLite connection + schema init. Single shared `db` instance.
-- **`auth.ts`** — request authentication. Today: trusts `X-Merchant-Id` header.
-  Eventually this becomes a real signed token; the header shape is a placeholder.
-- **`dal/`** — data-access layer. The intent is that all order queries route
-  through `ordersDal` so we have one place to add auditing, caching, tenancy
-  filters, etc. (Not all routes follow this yet — see `metrics.ts`.)
-- **`routes/`** — Express routers, one file per resource.
-- **`lib/`** — utilities. Empty at the moment but reserved for shared helpers.
+- **`middlewares/`** — cross-cutting request handling.
+  - `auth.ts` — trusts `X-Merchant-Id` header (placeholder for a signed token).
+  - `error-handler.ts` — terminal 500 handler; never leaks internals.
+- **`routes/`** — Express routers, one file per resource (`*.routes.ts`). Thin: they
+  only bind paths to controller methods.
+- **`controllers/`** — HTTP layer. Read the request, delegate to a service, shape the
+  response. No business logic or SQL.
+- **`services/`** — business logic. No req/res, no SQL. Talk to repositories.
+- **`repositories/`** — data-access layer. All queries route through here on the
+  shared `db` connection — one place for auditing, caching, tenancy filters, and the
+  seam for swapping the store (e.g. an ORM) later. `metricsRepository` now reads
+  through this seam too (it previously opened its own connection).
+- **`models/`** — domain/type definitions shared across layers.
+- **`scripts/`** — one-off tasks (`seed.ts`).
+- **`lib/`** — utilities. Reserved for shared helpers.
 
 ## Data model
 

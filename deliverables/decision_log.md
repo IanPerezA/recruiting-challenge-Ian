@@ -67,11 +67,13 @@ I USED AI Just for create this file in my local project and set the structure pr
 
 <!-- Tu plan actual: Feature C (order search) vía repositorio + services + dominio de objetos, sin SQL crudo. -->
 
-- **Feature:**
-- **Why this one and not the others:**
-- **What I cut to ship it in budget:**
-- **Confidence (1–10) that the shape I picked is the right one:**
-- **What would change my mind:**
+- **Feature:** Feature C — Order search with filters
+
+- **Why this one and not the others:** This feature allowed me to implement a robust Data Access Layer (DAL) repository pattern using Sequelize. other features are focused on infrastructure and I/O side-effects. Feature C, however, targets core query architecture, indexing, and input performance under scaling datasets, which perfectly leverages the newly introduced multi-layered domain architecture.
+- **What I cut to ship it in budget:** I deferred complex query optimization benchmarks on SQLite to stay within the 24-hour time limit. Instead of spending hours performance-testing millions of simulated rows, I focused the engineering budget on rewriting the layer architecture, fixing the critical core logic issues, and polishing the frontend filter dashboard UI.
+- **Confidence (1–10) that the shape I picked is the right one:** 8
+- **What would change my mind:** If a performance profiling benchmark reveals that Sequelize’s runtime overhead on complex `Op.and`/`Op.between` abstraction significantly reduces throughput compared to highly optimized raw SQL queries under a production load of 1.5k RPS.
+
 
 ## Things I noticed but did NOT fix
 

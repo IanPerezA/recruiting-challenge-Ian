@@ -1,24 +1,15 @@
 import { db } from '../db.js';
-
-export interface OrderRow {
-  id: string;
-  merchant_id: string;
-  customer_email: string;
-  total_amount: number;
-  type: 'sale' | 'refund';
-  status: string;
-  created_at: string;
-}
+import type { OrderRow, NewOrder, OrderListOptions } from '../models/order.js';
 
 /**
- * Data-access layer for orders. All order queries should go through here.
+ * Data-access layer for orders. All order queries route through here.
  *
  * - centralized place for query patterns
  * - the place to add auditing, caching, tenancy filters
- * - the seam for swapping the underlying store
+ * - the seam for swapping the underlying store (e.g. an ORM) later
  */
-export const ordersDal = {
-  listByMerchant(merchantId: string, opts: { from?: string; to?: string; limit?: number } = {}): OrderRow[] {
+export const ordersRepository = {
+  listByMerchant(merchantId: string, opts: OrderListOptions = {}): OrderRow[] {
     const limit = opts.limit ?? 100;
     if (opts.from && opts.to) {
       return db
@@ -39,7 +30,7 @@ export const ordersDal = {
     return db.prepare(`SELECT * FROM orders WHERE id = ?`).get(id) as OrderRow | undefined;
   },
 
-  create(order: Omit<OrderRow, 'created_at'>): OrderRow {
+  create(order: NewOrder): OrderRow {
     db.prepare(
       `INSERT INTO orders (id, merchant_id, customer_email, total_amount, type, status)
        VALUES (?, ?, ?, ?, ?, ?)`,

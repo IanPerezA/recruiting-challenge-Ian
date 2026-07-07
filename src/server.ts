@@ -1,10 +1,12 @@
 import express from 'express';
 import { initSchema } from './db.js';
-import { authMiddleware } from './auth.js';
-import { ordersRouter } from './routes/orders.js';
-import { revenueRouter } from './routes/revenue.js';
-import { metricsRouter } from './routes/metrics.js';
 import { seedIfEmpty } from './scripts/seed.js';
+import { authMiddleware } from './middlewares/auth.js';
+import { errorHandler } from './middlewares/error-handler.js';
+import { healthRouter } from './routes/health.routes.js';
+import { ordersRouter } from './routes/orders.routes.js';
+import { revenueRouter } from './routes/revenue.routes.js';
+import { metricsRouter } from './routes/metrics.routes.js';
 
 initSchema();
 seedIfEmpty();
@@ -15,18 +17,12 @@ const PORT = Number(process.env.PORT ?? 3000);
 app.use(express.json());
 app.use(express.static('public'));
 
-app.get('/api/health', (_req, res) => {
-  res.json({ ok: true });
-});
-
+app.use('/api/health', healthRouter);
 app.use('/api/orders', authMiddleware, ordersRouter);
 app.use('/api/revenue', authMiddleware, revenueRouter);
 app.use('/api/metrics', authMiddleware, metricsRouter);
 
-app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: 'internal_error' });
-});
+app.use(errorHandler);
 
 app.listen(PORT, () => {
   console.log(`dashboard server listening on http://localhost:${PORT}`);
