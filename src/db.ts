@@ -1,36 +1,33 @@
-import Database from 'better-sqlite3';
+import { Sequelize } from 'sequelize';
 import { mkdirSync, existsSync } from 'node:fs';
 import { dirname } from 'node:path';
 
 const DB_PATH = process.env.DB_PATH ?? 'data/dashboard.db';
 
-if (!existsSync(dirname(DB_PATH))) {
+if (DB_PATH !== ':memory:' && !existsSync(dirname(DB_PATH))) {
   mkdirSync(dirname(DB_PATH), { recursive: true });
 }
 
-export const db = new Database(DB_PATH);
-db.pragma('journal_mode = WAL');
-db.pragma('foreign_keys = ON');
+/** Single shared Sequelize connection (SQLite). */
+export const sequelize = new Sequelize({
+  dialect: 'sqlite',
+  storage: DB_PATH,
+  logging: false,
+});
 
-export function initSchema(): void {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS merchants (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS orders (
-      id TEXT PRIMARY KEY,
-      merchant_id TEXT NOT NULL REFERENCES merchants(id),
-      customer_email TEXT NOT NULL,
-      total_amount INTEGER NOT NULL,
-      type TEXT NOT NULL DEFAULT 'sale',
-      status TEXT NOT NULL DEFAULT 'completed',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_orders_merchant ON orders(merchant_id);
-    CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(created_at);
-  `);
+/**
+ * Registers models, applies pragmas, and creates tables if missing. Idempotent —
+ * safe to call from both the server bootstrap and the seed script/tests.
+ *
+ * Models are imported dynamically so `db.ts` has no static dependency on the
+ * model files (which import `sequelize` from here) — that keeps the module graph
+ * acyclic.
+ */
+export async function initDb(): Promise<void> {
+  await import('./models/index.js');
+  await sequelize.query('PRAGMA foreign_keys = ON;');
+  if (DB_PATH !== ':memory:') {
+    await sequelize.query('PRAGMA journal_mode = WAL;');
+  }
+  await sequelize.sync();
 }

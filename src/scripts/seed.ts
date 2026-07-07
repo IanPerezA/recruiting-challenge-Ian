@@ -1,5 +1,7 @@
-import { db, initSchema } from '../db.js';
 import { randomUUID } from 'node:crypto';
+import { sequelize, initDb } from '../db.js';
+import { Merchant, Order } from '../models/index.js';
+import type { CreationAttributes } from 'sequelize';
 
 const MERCHANTS = [
   { id: 'm_acme', name: 'Acme Supplies' },
@@ -21,43 +23,40 @@ function randomDateInLast90Days(): string {
   return new Date(now - offsetMs).toISOString();
 }
 
-export function seedIfEmpty(): void {
-  initSchema();
-  const existing = db.prepare(`SELECT COUNT(*) AS n FROM orders`).get() as { n: number };
-  if (existing.n > 0) return;
+export async function seedIfEmpty(): Promise<void> {
+  await initDb();
+  const existing = await Order.count();
+  if (existing > 0) return;
 
-  const insertMerchant = db.prepare(
-    `INSERT OR IGNORE INTO merchants (id, name) VALUES (?, ?)`,
-  );
-  for (const m of MERCHANTS) insertMerchant.run(m.id, m.name);
+  await Merchant.bulkCreate(MERCHANTS, { ignoreDuplicates: true });
 
-  const insertOrder = db.prepare(
-    `INSERT INTO orders (id, merchant_id, customer_email, total_amount, type, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?)`,
-  );
-
-  const insertMany = db.transaction(() => {
-    for (let i = 0; i < 80; i++) {
-      const merchant = MERCHANTS[i % MERCHANTS.length]!;
-      const customer = CUSTOMERS[i % CUSTOMERS.length]!;
-      const amount = Math.floor(2000 + Math.random() * 18000);
-      const type: 'sale' | 'refund' = Math.random() < 0.15 ? 'refund' : 'sale';
-      insertOrder.run(
-        randomUUID(),
-        merchant.id,
-        customer,
-        amount,
-        type,
-        'completed',
-        randomDateInLast90Days(),
-      );
-    }
-  });
-  insertMany();
+  const orders: CreationAttributes<Order>[] = [];
+  for (let i = 0; i < 80; i++) {
+    const merchant = MERCHANTS[i % MERCHANTS.length]!;
+    const customer = CUSTOMERS[i % CUSTOMERS.length]!;
+    const amount = Math.floor(2000 + Math.random() * 18000);
+    const type: 'sale' | 'refund' = Math.random() < 0.15 ? 'refund' : 'sale';
+    orders.push({
+      id: randomUUID(),
+      merchant_id: merchant.id,
+      customer_email: customer,
+      total_amount: amount,
+      type,
+      status: 'completed',
+      created_at: randomDateInLast90Days(),
+    });
+  }
+  await Order.bulkCreate(orders);
   console.log(`[seed] inserted ${MERCHANTS.length} merchants and 80 orders`);
 }
 
 const isMain = import.meta.url === `file://${process.argv[1]}` || import.meta.url.endsWith(process.argv[1] ?? '');
 if (isMain) {
-  seedIfEmpty();
+  seedIfEmpty()
+    .then(() => sequelize.close())
+    .then(() => process.exit(0))
+    .catch((err) => {
+      console.error(err);
+      process.exit(1);
+    });
 }

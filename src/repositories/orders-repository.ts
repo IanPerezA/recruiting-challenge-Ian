@@ -1,29 +1,28 @@
-import { db } from '../db.js';
+import { Op } from 'sequelize';
+import { Order } from '../models/order.model.js';
 import type { OrderRow, NewOrder, OrderListOptions } from '../models/order.js';
+
+function toRow(order: Order): OrderRow {
+  return order.toJSON() as OrderRow;
+}
 
 /**
  * Data-access layer for orders. All order queries route through here.
  *
  * - centralized place for query patterns
  * - the place to add auditing, caching, tenancy filters
- * - the seam for swapping the underlying store (e.g. an ORM) later
+ * - now backed by Sequelize models instead of raw SQL
  */
 export const ordersRepository = {
-  listByMerchant(merchantId: string, opts: OrderListOptions = {}): OrderRow[] {
+  async listByMerchant(merchantId: string, opts: OrderListOptions = {}): Promise<OrderRow[]> {
     const limit = opts.limit ?? 100;
-    if (opts.from && opts.to) {
-      return db
-        .prepare(
-          `SELECT * FROM orders
-           WHERE merchant_id = ? AND created_at >= ? AND created_at < ?
-           ORDER BY created_at DESC
-           LIMIT ?`,
-        )
-        .all(merchantId, opts.from, opts.to, limit) as OrderRow[];
-    }
-    return db
-      .prepare(`SELECT * FROM orders WHERE merchant_id = ? ORDER BY created_at DESC LIMIT ?`)
-      .all(merchantId, limit) as OrderRow[];
+    const where =
+      opts.from && opts.to
+        ? { merchant_id: merchantId, created_at: { [Op.gte]: opts.from, [Op.lt]: opts.to } }
+        : { merchant_id: merchantId };
+
+    const rows = await Order.findAll({ where, order: [['created_at', 'DESC']], limit });
+    return rows.map(toRow);
   },
 
   /**
@@ -31,32 +30,25 @@ export const ordersRepository = {
    * signature on purpose: there is no way to read an order without proving which
    * merchant is asking, so a cross-tenant read (IDOR) cannot compile.
    */
-  findById(id: string, merchantId: string): OrderRow | undefined {
-    return db
-      .prepare(`SELECT * FROM orders WHERE id = ? AND merchant_id = ?`)
-      .get(id, merchantId) as OrderRow | undefined;
+  async findById(id: string, merchantId: string): Promise<OrderRow | undefined> {
+    const order = await Order.findOne({ where: { id, merchant_id: merchantId } });
+    return order ? toRow(order) : undefined;
   },
 
-  create(order: NewOrder): OrderRow {
-    db.prepare(
-      `INSERT INTO orders (id, merchant_id, customer_email, total_amount, type, status)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-    ).run(order.id, order.merchant_id, order.customer_email, order.total_amount, order.type, order.status);
-    return this.findById(order.id, order.merchant_id)!;
+  async create(order: NewOrder): Promise<OrderRow> {
+    await Order.create({ ...order });
+    // Re-read so the returned row carries the DB-assigned created_at.
+    return (await this.findById(order.id, order.merchant_id))!;
   },
 
   /**
    * Sum total_amount over a date range for a merchant.
    * Used by the revenue endpoint.
    */
-  sumAmountByMerchant(merchantId: string, from: string, to: string): number {
-    const row = db
-      .prepare(
-        `SELECT COALESCE(SUM(total_amount), 0) AS total
-         FROM orders
-         WHERE merchant_id = ? AND created_at >= ? AND created_at < ?`,
-      )
-      .get(merchantId, from, to) as { total: number };
-    return row.total;
+  async sumAmountByMerchant(merchantId: string, from: string, to: string): Promise<number> {
+    const total = await Order.sum('total_amount', {
+      where: { merchant_id: merchantId, created_at: { [Op.gte]: from, [Op.lt]: to } },
+    });
+    return total ?? 0;
   },
 };

@@ -3,13 +3,13 @@ import { metricsService } from '../services/metrics-service.js';
 
 export const metricsController = {
   /** GET /api/metrics/summary — dashboard summary stats for the current merchant. */
-  summary(req: Request, res: Response): void {
-    res.json(metricsService.getSummary(req.merchantId!));
+  async summary(req: Request, res: Response): Promise<void> {
+    res.json(await metricsService.getSummary(req.merchantId!));
   },
 
   /** GET /api/metrics/top-customers?limit=N */
-  topCustomers(req: Request, res: Response): void {
+  async topCustomers(req: Request, res: Response): Promise<void> {
     const limit = Number(req.query.limit ?? 5);
-    res.json({ customers: metricsService.getTopCustomers(req.merchantId!, limit) });
+    res.json({ customers: await metricsService.getTopCustomers(req.merchantId!, limit) });
   },
 };

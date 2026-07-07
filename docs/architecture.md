@@ -10,7 +10,8 @@ service → repository → (db)**. Each layer only knows about the one below it.
 
 - **`server.ts`** — Express bootstrapper. Wires routers to paths and mounts auth +
   the terminal error handler.
-- **`db.ts`** — SQLite connection + schema init. Single shared `db` instance.
+- **`db.ts`** — Sequelize connection (SQLite) + `initDb()` (pragmas + `sync()`).
+  Single shared `sequelize` instance. Persistence is Sequelize ORM, not raw SQL.
 - **`middlewares/`** — cross-cutting request handling.
   - `auth.ts` — trusts `X-Merchant-Id` header (placeholder for a signed token).
   - `error-handler.ts` — terminal 500 handler; never leaks internals.

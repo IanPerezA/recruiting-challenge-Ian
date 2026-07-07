@@ -25,6 +25,6 @@ I USED AI Just for create this file in my local project and set the structure pr
 
 ## Sign-offs
 
-✅- `<sha>` — I just created files for submition
-✖️ - `<sha>` — I have not read claude generated code cause i only check de API still running and check de new folders distribution
-- `<sha>` —
+✅- `07db7241fa7a34878f0be2c125bc88bd12cba4e7` — I just created files for submition
+✖️ - `09fc16c2857d5129d46cecb700a4a9b196f93785` — I have not read claude generated code cause i only check de API still running and check de new folders distribution
+⚠️- `9cfbee84cd1907ad2ae4bc0bfe3a42615e2044cc` — I have read most of this commit. I verified the signature change from getById(id) to findById(id, merchantId) across the controller, service, and repository layers, and confirmed the SQL injection of parameters is safe. Confident on the cross-tenant query logic and the new regression test, but uncertain about how the frontend handles the new 404 response instead of the previous behavior. I'd want a staging end-to-end smoke test before staking my name on prod.

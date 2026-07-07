@@ -7,11 +7,11 @@ import type { OrderRow, OrderListOptions } from '../models/order.js';
  * repository. No SQL, no req/res here.
  */
 export const ordersService = {
-  listOrders(merchantId: string, opts: OrderListOptions): OrderRow[] {
+  listOrders(merchantId: string, opts: OrderListOptions): Promise<OrderRow[]> {
     return ordersRepository.listByMerchant(merchantId, opts);
   },
 
-  getOrder(id: string, merchantId: string): OrderRow | undefined {
+  getOrder(id: string, merchantId: string): Promise<OrderRow | undefined> {
     return ordersRepository.findById(id, merchantId);
   },
 
@@ -20,7 +20,7 @@ export const ordersService = {
     customer_email: string;
     total_amount: number;
     type: 'sale' | 'refund';
-  }): OrderRow {
+  }): Promise<OrderRow> {
     return ordersRepository.create({
       id: randomUUID(),
       merchant_id: input.merchant_id,

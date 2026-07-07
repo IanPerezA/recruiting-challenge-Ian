@@ -1,5 +1,5 @@
 import express from 'express';
-import { initSchema } from './db.js';
+import { initDb } from './db.js';
 import { seedIfEmpty } from './scripts/seed.js';
 import { authMiddleware } from './middlewares/auth.js';
 import { errorHandler } from './middlewares/error-handler.js';
@@ -8,8 +8,8 @@ import { ordersRouter } from './routes/orders.routes.js';
 import { revenueRouter } from './routes/revenue.routes.js';
 import { metricsRouter } from './routes/metrics.routes.js';
 
-initSchema();
-seedIfEmpty();
+await initDb();
+await seedIfEmpty();
 
 const app = express();
 const PORT = Number(process.env.PORT ?? 3000);

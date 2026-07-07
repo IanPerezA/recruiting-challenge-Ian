@@ -6,7 +6,7 @@ export const revenueController = {
    * GET /api/revenue?from=YYYY-MM-DD&to=YYYY-MM-DD
    * Total revenue for the authenticated merchant in the given date range.
    */
-  get(req: Request, res: Response): void {
+  async get(req: Request, res: Response): Promise<void> {
     const from = typeof req.query.from === 'string' ? req.query.from : undefined;
     const to = typeof req.query.to === 'string' ? req.query.to : undefined;
     if (!from || !to) {
@@ -14,7 +14,7 @@ export const revenueController = {
       return;
     }
 
-    const total = revenueService.getRevenue(req.merchantId!, from, to);
+    const total = await revenueService.getRevenue(req.merchantId!, from, to);
     res.json({
       merchant_id: req.merchantId,
       from,
