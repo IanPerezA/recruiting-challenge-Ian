@@ -17,6 +17,13 @@ export const ordersController = {
     res.json({ orders });
   },
 
+  /** GET /api/orders/search — filters come pre-validated on req.orderSearch. */
+  async search(req: Request, res: Response): Promise<void> {
+    const filters = req.orderSearch!;
+    const { data, total } = await ordersService.searchOrders(req.merchantId!, filters);
+    res.json({ data, pagination: { total, limit: filters.limit, offset: filters.offset } });
+  },
+
   async getById(req: Request, res: Response): Promise<void> {
     const id = req.params.id;
     if (typeof id !== 'string') {

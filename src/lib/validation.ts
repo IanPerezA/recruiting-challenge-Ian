@@ -41,3 +41,48 @@ export function parseLimit(raw: unknown, fallback: number): number {
   }
   return n;
 }
+
+/**
+ * An amount *bound* for range filtering: integer `0..MAX_AMOUNT_CENTS`.
+ * Unlike `parseAmount` (order creation), 0 is a legal lower bound.
+ */
+export function parseAmountBound(raw: unknown): number {
+  const n = typeof raw === 'number' ? raw : Number(raw);
+  if (typeof raw === 'string' && raw.trim() === '') {
+    throw new BadRequestError('invalid_amount', `amount bounds must be integers in cents (0..${MAX_AMOUNT_CENTS})`);
+  }
+  if (!Number.isInteger(n) || n < 0 || n > MAX_AMOUNT_CENTS) {
+    throw new BadRequestError('invalid_amount', `amount bounds must be integers in cents (0..${MAX_AMOUNT_CENTS})`);
+  }
+  return n;
+}
+
+/** Pagination offset: absent → fallback; else a non-negative integer. */
+export function parseOffset(raw: unknown, fallback = 0): number {
+  if (raw === undefined) return fallback;
+  const value = Array.isArray(raw) ? raw[raw.length - 1] : raw;
+  const n = typeof value === 'number' ? value : Number(value);
+  if (typeof value === 'string' && value.trim() === '') {
+    throw new BadRequestError('invalid_offset', 'offset must be a non-negative integer');
+  }
+  if (!Number.isInteger(n) || n < 0) {
+    throw new BadRequestError('invalid_offset', 'offset must be a non-negative integer');
+  }
+  return n;
+}
+
+/** Allowlist check: value must be one of `allowed`, else 400 with `code`. */
+export function parseEnum<T extends string>(raw: unknown, allowed: readonly T[], code: string): T {
+  if (typeof raw === 'string' && (allowed as readonly string[]).includes(raw)) {
+    return raw as T;
+  }
+  throw new BadRequestError(code, `value must be one of: ${allowed.join(', ')}`);
+}
+
+/** A calendar date `YYYY-MM-DD`; anything else fails fast with `code`. */
+export function parseDateOnly(raw: unknown, code: string): string {
+  if (typeof raw !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    throw new BadRequestError(code, 'date must be YYYY-MM-DD');
+  }
+  return raw;
+}

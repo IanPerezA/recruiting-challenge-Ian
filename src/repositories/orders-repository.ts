@@ -1,8 +1,9 @@
-import { fn } from 'sequelize';
+import { fn, Op, type WhereOptions } from 'sequelize';
 import { Order } from '../models/order.model.js';
 import { signedAmount } from './order-amount.js';
 import { whereCreatedAt } from './date-range.js';
 import type { OrderRow, NewOrder, OrderListOptions } from '../models/order.js';
+import type { OrderSearchFilters, OrderSearchResult } from '../models/order-search.js';
 
 function toRow(order: Order): OrderRow {
   return order.toJSON() as OrderRow;
@@ -40,6 +41,37 @@ export const ordersRepository = {
     await Order.create({ ...order });
     // Re-read so the returned row carries the DB-assigned created_at.
     return (await this.findById(order.id, order.merchant_id))!;
+  },
+
+  /**
+   * Filtered, paginated, tenant-scoped order search. Receives already-validated
+   * filters (the middleware owns input checking). `total` counts every match so
+   * the client can paginate; `data` is the requested page.
+   */
+  async search(merchantId: string, filters: OrderSearchFilters): Promise<OrderSearchResult> {
+    const where: WhereOptions = { merchant_id: merchantId, ...whereCreatedAt(filters.from, filters.to) };
+
+    if (filters.customer_email) {
+      // SQLite LIKE is case-insensitive for ASCII by default.
+      where.customer_email = { [Op.like]: `%${filters.customer_email}%` };
+    }
+    if (filters.status) where.status = filters.status;
+    if (filters.type) where.type = filters.type;
+
+    if (filters.min_amount !== undefined || filters.max_amount !== undefined) {
+      const amount: { [Op.gte]?: number; [Op.lte]?: number } = {};
+      if (filters.min_amount !== undefined) amount[Op.gte] = filters.min_amount;
+      if (filters.max_amount !== undefined) amount[Op.lte] = filters.max_amount;
+      where.total_amount = amount;
+    }
+
+    const { rows, count } = await Order.findAndCountAll({
+      where,
+      order: [[filters.sort_by, filters.order]],
+      limit: filters.limit,
+      offset: filters.offset,
+    });
+    return { data: rows.map(toRow), total: count };
   },
 
   /**

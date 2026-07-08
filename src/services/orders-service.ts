@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ordersRepository } from '../repositories/orders-repository.js';
 import type { OrderRow, OrderListOptions } from '../models/order.js';
+import type { OrderSearchFilters, OrderSearchResult } from '../models/order-search.js';
 
 /**
  * Business logic for orders. Controllers talk to this; this talks to the
@@ -13,6 +14,11 @@ export const ordersService = {
 
   getOrder(id: string, merchantId: string): Promise<OrderRow | undefined> {
     return ordersRepository.findById(id, merchantId);
+  },
+
+  /** Filtered order search; filters arrive pre-validated from the middleware. */
+  searchOrders(merchantId: string, filters: OrderSearchFilters): Promise<OrderSearchResult> {
+    return ordersRepository.search(merchantId, filters);
   },
 
   createOrder(input: {

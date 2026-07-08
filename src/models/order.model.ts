@@ -41,9 +41,15 @@ Order.init(
     sequelize,
     tableName: 'orders',
     timestamps: false,
+    // Composite, tenant-first indices: every query is scoped by merchant_id, so
+    // merchant_id leads and the second column serves the filter/sort.
+    // customer_email LIKE '%x%' can't use a b-tree index (leading wildcard) →
+    // within-tenant scan; acceptable at this scale (FTS/trigram is the real fix).
     indexes: [
-      { name: 'idx_orders_merchant', fields: ['merchant_id'] },
-      { name: 'idx_orders_created', fields: ['created_at'] },
+      { name: 'idx_orders_merchant_created', fields: ['merchant_id', 'created_at'] },
+      { name: 'idx_orders_merchant_amount', fields: ['merchant_id', 'total_amount'] },
+      { name: 'idx_orders_merchant_status', fields: ['merchant_id', 'status'] },
+      { name: 'idx_orders_merchant_type', fields: ['merchant_id', 'type'] },
     ],
   },
 );
