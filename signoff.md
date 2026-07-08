@@ -15,4 +15,4 @@ Sign-offs
 - ⚠️ e302aca (refunds net of sales) — Read it: checked signedAmount() and the invariant test 10000+20000−5000= 25000, and that avg and top-customers use the same rule; unsure about the AVG-of-signed reading for avg_order_value.
 - ⚠️ 2a1b1a5 (input validation) — Read it: checked the parser rules (positive-int amount, limit 1..250, no silent clamp, type allowlist) and the HTTP contract test; want one more look at malformed-JSON → 400.
 - ❌ 932187f (order search) — Did not fully read the search layer; accepted because the 8 repository tests and a live smoke passed. Risk I accept: LIKE '%x%' performance and deep offset paging.
-- ❌ (without commit at the moment of wirting this) — Did not fully read the ported UI JS; accepted because the page and assets load and the queries return correct results. Risk I accept: light/dark, mobile, and modal states unverified until I click through myself.
+- ⚠️ ea73918 — Did not fully read the ported UI JS; accepted because the page and assets load and the queries return correct results. Risk I accept: light/dark, mobile, and modal states.

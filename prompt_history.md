@@ -21,21 +21,21 @@ How much of the work was AI-assisted
 
 Sessions
 
-The raw transcript lives in ./prompt-log/, one turn per pair of files, in order. It is not pasted here on purpose (see the note above). Index:
+The raw transcript lives in ./deliverables/prompt-log/, one turn per pair of files, in order. It is not pasted here on purpose (see the note above). Index:
 
 | Turno | Prompt | Respuesta | Tema |
 |---|---|---|---|
-| 01 | prompt | respuesta | Contexto + reglas de la bitácora + DUDA SQLite/ORM + primera revisión de código |
-| 02 | prompt | respuesta | Confirmar carpeta deliverables/ + primer commit |
-| 03 | prompt | respuesta | Refactor a capas route/controller/service/repository |
-| 04 | prompt | respuesta | Fix IDOR (findById(id, merchantId)) |
-| 05 | prompt | respuesta | Plan de 4 tareas + migración a Sequelize |
-| 06 | prompt | respuesta | Fix refunds (revenue neto) |
-| 07 | prompt | respuesta | Fix rango de fechas (inclusivo + parcial) |
-| 08 | prompt | respuesta | Validación de input + contrato HTTP |
-| 09 | prompt | respuesta | Feature C — búsqueda de pedidos |
-| 10 | prompt | respuesta | Rediseño UI desde Claude Design |
-| 11 | prompt | respuesta | Lista de pendientes de redacción |
+| 01 | [prompt](./deliverables/prompt-log/turn-01-prompt.md) | [respuesta](./deliverables/prompt-log/turn-01-response.md) | Contexto + reglas de la bitácora + DUDA SQLite/ORM + primera revisión de código |
+| 02 | [prompt](./deliverables/prompt-log/turn-02-prompt.md) | [respuesta](./deliverables/prompt-log/turn-02-response.md) | Confirmar carpeta deliverables/ + primer commit |
+| 03 | [prompt](./deliverables/prompt-log/turn-03-prompt.md) | [respuesta](./deliverables/prompt-log/turn-03-response.md) | Refactor a capas route/controller/service/repository |
+| 04 | [prompt](./deliverables/prompt-log/turn-04-prompt.md) | [respuesta](./deliverables/prompt-log/turn-04-response.md) | Fix IDOR (findById(id, merchantId)) |
+| 05 | [prompt](./deliverables/prompt-log/turn-05-prompt.md) | [respuesta](./deliverables/prompt-log/turn-05-response.md) | Plan de 4 tareas + migración a Sequelize |
+| 06 | [prompt](./deliverables/prompt-log/turn-06-prompt.md) | [respuesta](./deliverables/prompt-log/turn-06-response.md) | Fix refunds (revenue neto) |
+| 07 | [prompt](./deliverables/prompt-log/turn-07-prompt.md) | [respuesta](./deliverables/prompt-log/turn-07-response.md) | Fix rango de fechas (inclusivo + parcial) |
+| 08 | [prompt](./deliverables/prompt-log/turn-08-prompt.md) | [respuesta](./deliverables/prompt-log/turn-08-response.md) | Validación de input + contrato HTTP |
+| 09 | [prompt](./deliverables/prompt-log/turn-09-prompt.md) | [respuesta](./deliverables/prompt-log/turn-09-response.md) | Feature C — búsqueda de pedidos |
+| 10 | [prompt](./deliverables/prompt-log/turn-10-prompt.md) | [respuesta](./deliverables/prompt-log/turn-10-response.md) | Rediseño UI desde Claude Design |
+| 11 | [prompt](./deliverables/prompt-log/turn-11-prompt.md) | [respuesta](./deliverables/prompt-log/turn-11-response.md) | Lista de pendientes de redacción |
 
 What Claude (or your AI tool) got wrong
 
