@@ -18,7 +18,9 @@ if the order does not exist *or* belongs to another merchant (no cross-tenant re
 Body: `{ customer_email, total_amount, type? }`.
 
 ## `GET /api/revenue?from=...&to=...`
-Total revenue for the merchant in the date range.
+**Net** revenue for the merchant in the date range: sales add, refunds subtract
+(`Σ sales − Σ refunds`). Same sign rule applies to `avg_order_value` and top-customer
+`total_spent` in the metrics endpoints.
 
 ## `GET /api/metrics/summary`
 TODO: document fields.

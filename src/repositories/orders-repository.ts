@@ -1,5 +1,6 @@
-import { Op } from 'sequelize';
+import { Op, fn } from 'sequelize';
 import { Order } from '../models/order.model.js';
+import { signedAmount } from './order-amount.js';
 import type { OrderRow, NewOrder, OrderListOptions } from '../models/order.js';
 
 function toRow(order: Order): OrderRow {
@@ -42,13 +43,15 @@ export const ordersRepository = {
   },
 
   /**
-   * Sum total_amount over a date range for a merchant.
+   * Net revenue over a date range for a merchant: sales add, refunds subtract.
    * Used by the revenue endpoint.
    */
   async sumAmountByMerchant(merchantId: string, from: string, to: string): Promise<number> {
-    const total = await Order.sum('total_amount', {
+    const row = (await Order.findOne({
+      attributes: [[fn('SUM', signedAmount()), 'total']],
       where: { merchant_id: merchantId, created_at: { [Op.gte]: from, [Op.lt]: to } },
-    });
-    return total ?? 0;
+      raw: true,
+    })) as unknown as { total: number | null } | null;
+    return row?.total ?? 0;
   },
 };

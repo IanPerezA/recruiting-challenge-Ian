@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import { sequelize, initDb } from '../src/db.js';
 import { Merchant } from '../src/models/index.js';
 import { ordersRepository } from '../src/repositories/orders-repository.js';
+import { metricsService } from '../src/services/metrics-service.js';
 
 after(async () => {
   await sequelize.close();
@@ -60,4 +61,20 @@ test('orders repository: findById is tenant-scoped (no cross-merchant read / IDO
   assert.equal((await ordersRepository.findById('o_secret', 'm_owner'))?.id, 'o_secret');
   // A different merchant asking for the same id gets nothing (no leak).
   assert.equal(await ordersRepository.findById('o_secret', 'm_attacker'), undefined);
+});
+
+test('money totals are net of refunds: revenue == sum(sales) - sum(refunds)', async () => {
+  await initDb();
+  await Merchant.upsert({ id: 'm_net', name: 'Net' });
+  await ordersRepository.create({ id: 'ns1', merchant_id: 'm_net', customer_email: 'a@a.com', total_amount: 10000, type: 'sale', status: 'completed' });
+  await ordersRepository.create({ id: 'ns2', merchant_id: 'm_net', customer_email: 'a@a.com', total_amount: 20000, type: 'sale', status: 'completed' });
+  await ordersRepository.create({ id: 'nr1', merchant_id: 'm_net', customer_email: 'a@a.com', total_amount: 5000, type: 'refund', status: 'completed' });
+
+  // Revenue is the signed sum: 10000 + 20000 - 5000 = 25000 (NOT 35000).
+  const revenue = await ordersRepository.sumAmountByMerchant('m_net', '2000-01-01', '2100-01-01');
+  assert.equal(revenue, 25000);
+
+  // avg_order_value follows the same rule: round(25000 / 3 orders).
+  const summary = await metricsService.getSummary('m_net');
+  assert.equal(summary.avg_order_value_cents, Math.round(25000 / 3));
 });

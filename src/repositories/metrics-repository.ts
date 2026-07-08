@@ -1,5 +1,6 @@
 import { fn, col, literal } from 'sequelize';
 import { Order } from '../models/order.model.js';
+import { signedAmount } from './order-amount.js';
 import type { TopCustomer } from '../models/metrics.js';
 
 /**
@@ -15,11 +16,14 @@ export const metricsRepository = {
     return Order.count({ where: { merchant_id: merchantId }, distinct: true, col: 'customer_email' });
   },
 
+  /** Average net order value: refunds subtract, matching the revenue rule. */
   async avgOrderAmount(merchantId: string): Promise<number> {
-    const avg = (await Order.aggregate('total_amount', 'AVG', {
+    const row = (await Order.findOne({
+      attributes: [[fn('AVG', signedAmount()), 'avg']],
       where: { merchant_id: merchantId },
-    })) as number | null;
-    return avg ?? 0;
+      raw: true,
+    })) as unknown as { avg: number | null } | null;
+    return row?.avg ?? 0;
   },
 
   async topCustomers(merchantId: string, limit: number): Promise<TopCustomer[]> {
@@ -28,7 +32,7 @@ export const metricsRepository = {
       attributes: [
         'customer_email',
         [fn('COUNT', col('*')), 'order_count'],
-        [fn('SUM', col('total_amount')), 'total_spent'],
+        [fn('SUM', signedAmount()), 'total_spent'],
       ],
       group: ['customer_email'],
       order: [[literal('total_spent'), 'DESC']],

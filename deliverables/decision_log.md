@@ -47,13 +47,13 @@ I USED AI Just for create this file in my local project and set the structure pr
   - **I disagreed with Claude on:**
   - Alternatives I considered and rejected:
 
-- **Issue 2 — <título corto>**
-  - What was wrong or weak:
-  - Shape of my improvement:
-  - **Confidence (1–10):**
-  - **What would falsify this fix:**
-  - **I disagreed with Claude on:**
-  - Alternatives I considered and rejected:
+- **Issue 2 — Refunds computed as positive revenue**
+  - What was wrong or weak: The `OrdersRepository` and data aggregation layers summed `total_amount` indiscriminately across all transactions. Because the database seeds refund amounts as positive integers, refunds were treated as sales, heavily inflating the total revenue, average order value, and top customer metrics.
+  - Shape of my improvement: I refactored the data aggregation logic to evaluate the transaction `type`. The business layer now contextually processes the amounts: adding to the balance if the type is `'sale'` and subtracting if it is `'refund'`.
+  - **Confidence (1–10):** 9
+  - **What would falsify this fix:** If there are historical records in production where refunds were already manually flipped to negative numbers, which would cause my subtraction logic to double-invert the value into an accidental addition.
+  - **I disagreed with Claude on:** *did not disagree* (The mathematical fix is deterministic, though I had to ensure Claude applied the subtraction rule uniformly across both the revenue service and the metrics breakdown).
+  - Alternatives I considered and rejected: Inverting the amounts to negative numbers directly during the database seeding phase. Rejected because standard financial schemas store ledger entries as absolute values, leaving accounting sign-conventions to the business domain layer.
 
 - **Issue 3 — <título corto>**
   - What was wrong or weak:

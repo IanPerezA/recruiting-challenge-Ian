@@ -39,13 +39,15 @@ I USED AI Just for create this file in my local project and set the structure pr
 
 - **If I did not build it, the reason (scope / time / dependency / "needs a wider conversation"):**
     N/A (Built and enforced during the data layer re-architecture).
-### Class 2 — <nombra la clase>
+### Class 2 — Refund Issue
 
 - **Instances I fixed:**
+  the method sumAmountByMerchant was incorrect by a validation mistake, it doesnt chech the transaction type so, it was adding refund movements to the revenue and the avg_order_value field
 - **The gate I built (or would build):**
-- **What this gate would catch that a regression test would miss:**
+
+  modify the logic in order to sum only sale transactions and less refund ones
 - **Where to see the gate in the diff:**
-- **If I did not build it, the reason:**
+  (update commit hash when it is done)
 
 ### Class 3 — <nombra la clase>
 
