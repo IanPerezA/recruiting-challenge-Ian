@@ -1,27 +1,11 @@
-# Validation design — <TU NOMBRE>
+# Validation design — Ian Miztli Perez Aguirre
 
-<!--
-  ============================================================
-  ESCRIBIR A MANO. SIN IA. (solo corrector ortográfico)
-  Este artefacto mide TU criterio sobre cómo hacer seguro el código asistido por IA.
-  ~300 palabras. Gates concretos y nombrados, no filosofía.
-  1–3 gates REALES diseñados a propósito, no 10 genéricos.
-  Borra estos comentarios antes de entregar.
-  ============================================================
--->
+
 
 ## Authorship declaration
 
 I USED AI Just for create this file in my local project and set the structure provided. The content wrote over here is 100%  mine
 
-
-
----
-
-<!-- Para cada CLASE de bug (agrupa por clase, no por instancia).
-     Formas de gate, de menor a mayor robustez:
-       regression test < property/fuzz test < golden/contract test < CI/lint rule < type constraint < architecture/import rule < eval suite
-     "Added a regression test" es el piso, no la respuesta. -->
 
 ### Class 1 — Multi-tenant authorization (IDOR)
 
@@ -49,10 +33,18 @@ I USED AI Just for create this file in my local project and set the structure pr
 - **Where to see the gate in the diff:**
   (update commit hash when it is done)
 
-### Class 3 — <nombra la clase>
+### Class 3 — Chronological Boundary and Partial Range Correctness
 
-- **Instances I fixed:**
-- **The gate I built (or would build):**
-- **What this gate would catch that a regression test would miss:**
-- **Where to see the gate in the diff:**
-- **If I did not build it, the reason:**
+- **Instances I fixed:** Corrected string comparison truncation and silent filtering drops within the dates processing scope inside `src/repositories/orders-repository.ts` (affecting the revenue and orders lookup services).
+- **The gate I built (or would build):** A parameterized boundary execution test. This gate evaluates three extreme temporal invariants: (1) A transaction recorded at exactly `23:59:59.999` on the `to` date must be included in the dataset, (2) providing only a `from` parameter must structurally translate into a lower-bounded query open on the upper end, and (3) a transaction at `00:00:00.000` on the day following the `to` boundary must be strictly excluded.
+- **What this gate would catch that a regression test would miss:** A typical regression test passes as long as an order in the middle of the month is found. It misses subtle off-by-one errors introduced by edge timezones or server desynchronizations during minor internal database library updates. The boundary gate checks the literal edge cases of the time spectrum.
+- **Where to see the gate in the diff:** `test/orders.test.ts`   (update commit hash when it is done)
+
+
+### Class 4 — Input Sanitation, Contract Enforcement, and Resource Bounds
+
+- **Instances I fixed:** Fixed unbounded payload parsing vulnerabilities inside `src/controllers/orders-controller.ts` and missing limit sanitizers inside `src/controllers/metrics-controller.ts`.
+- **The gate I built (or would build):** An API contract testing layer. This quality gate executes automated fuzzing vectors against HTTP entry endpoints, evaluating payloads with fuzz variables (e.g., fractional numbers, zero sums, symbols, extreme integers, missing request values, and overflow limit sizes). The test suites guarantee that the server physically prevents the thread loop from routing past the middleware/controller boundary unless the contract constraints match perfectly.
+- **What this gate would catch that a regression test would miss:** A standard regression test only checks if a correct JSON entity body writes safely into the SQLite row database. It completely misses edge cases where a downstream query fails later on because a string like `NaN` passed deep inside an internal SQL engine `LIMIT` clause during a nested lookup execution. This gate catches malicious data formats at the very gateway of the application lifecycle.
+- **Where to see the gate in the diff:** 
+  (update commit hash when it is done)

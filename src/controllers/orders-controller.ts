@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
 import { ordersService } from '../services/orders-service.js';
+import { BadRequestError } from '../lib/errors.js';
+import { parseAmount, parseOrderType, parseLimit } from '../lib/validation.js';
 
 /**
  * HTTP layer for orders: reads the request, delegates to the service, shapes
@@ -10,7 +12,7 @@ export const ordersController = {
     const orders = await ordersService.listOrders(req.merchantId!, {
       from: typeof req.query.from === 'string' ? req.query.from : undefined,
       to: typeof req.query.to === 'string' ? req.query.to : undefined,
-      limit: typeof req.query.limit === 'string' ? Number(req.query.limit) : undefined,
+      limit: parseLimit(req.query.limit, 100),
     });
     res.json({ orders });
   },
@@ -30,20 +32,15 @@ export const ordersController = {
   },
 
   async create(req: Request, res: Response): Promise<void> {
-    const body = req.body as {
-      customer_email?: string;
-      total_amount?: number;
-      type?: 'sale' | 'refund';
-    };
-    if (!body.customer_email || typeof body.total_amount !== 'number') {
-      res.status(400).json({ error: 'invalid_body' });
-      return;
+    const body = req.body as { customer_email?: unknown; total_amount?: unknown; type?: unknown };
+    if (typeof body.customer_email !== 'string' || body.customer_email.length === 0) {
+      throw new BadRequestError('invalid_body', 'customer_email is required');
     }
     const order = await ordersService.createOrder({
       merchant_id: req.merchantId!,
       customer_email: body.customer_email,
-      total_amount: body.total_amount,
-      type: body.type ?? 'sale',
+      total_amount: parseAmount(body.total_amount),
+      type: parseOrderType(body.type),
     });
     res.status(201).json({ order });
   },

@@ -1,6 +1,7 @@
-import { Op, fn } from 'sequelize';
+import { fn } from 'sequelize';
 import { Order } from '../models/order.model.js';
 import { signedAmount } from './order-amount.js';
+import { whereCreatedAt } from './date-range.js';
 import type { OrderRow, NewOrder, OrderListOptions } from '../models/order.js';
 
 function toRow(order: Order): OrderRow {
@@ -17,12 +18,11 @@ function toRow(order: Order): OrderRow {
 export const ordersRepository = {
   async listByMerchant(merchantId: string, opts: OrderListOptions = {}): Promise<OrderRow[]> {
     const limit = opts.limit ?? 100;
-    const where =
-      opts.from && opts.to
-        ? { merchant_id: merchantId, created_at: { [Op.gte]: opts.from, [Op.lt]: opts.to } }
-        : { merchant_id: merchantId };
-
-    const rows = await Order.findAll({ where, order: [['created_at', 'DESC']], limit });
+    const rows = await Order.findAll({
+      where: { merchant_id: merchantId, ...whereCreatedAt(opts.from, opts.to) },
+      order: [['created_at', 'DESC']],
+      limit,
+    });
     return rows.map(toRow);
   },
 
@@ -49,7 +49,7 @@ export const ordersRepository = {
   async sumAmountByMerchant(merchantId: string, from: string, to: string): Promise<number> {
     const row = (await Order.findOne({
       attributes: [[fn('SUM', signedAmount()), 'total']],
-      where: { merchant_id: merchantId, created_at: { [Op.gte]: from, [Op.lt]: to } },
+      where: { merchant_id: merchantId, ...whereCreatedAt(from, to) },
       raw: true,
     })) as unknown as { total: number | null } | null;
     return row?.total ?? 0;

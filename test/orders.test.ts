@@ -4,7 +4,7 @@ if (!process.env.DB_PATH) process.env.DB_PATH = ':memory:';
 import { test, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { sequelize, initDb } from '../src/db.js';
-import { Merchant } from '../src/models/index.js';
+import { Merchant, Order } from '../src/models/index.js';
 import { ordersRepository } from '../src/repositories/orders-repository.js';
 import { metricsService } from '../src/services/metrics-service.js';
 
@@ -77,4 +77,27 @@ test('money totals are net of refunds: revenue == sum(sales) - sum(refunds)', as
   // avg_order_value follows the same rule: round(25000 / 3 orders).
   const summary = await metricsService.getSummary('m_net');
   assert.equal(summary.avg_order_value_cents, Math.round(25000 / 3));
+});
+
+test('date range: `to` day is inclusive and lone bounds filter partially', async () => {
+  await initDb();
+  await Merchant.upsert({ id: 'm_date', name: 'Date' });
+  const mk = (id: string, created_at: string) =>
+    Order.create({ id, merchant_id: 'm_date', customer_email: 'd@d.com', total_amount: 1000, type: 'sale', status: 'completed', created_at });
+  await mk('d_first', '2026-03-01T00:00:00.000Z');
+  await mk('d_mid', '2026-03-15T12:00:00.000Z');
+  await mk('d_last', '2026-03-31T23:59:59.999Z'); // last instant of the `to` day
+  await mk('d_next', '2026-04-01T00:00:00.000Z'); // first instant of the next day
+
+  // Full range [03-01, 03-31]: includes the 23:59:59.999 order, excludes 04-01 00:00.
+  const full = await ordersRepository.listByMerchant('m_date', { from: '2026-03-01', to: '2026-03-31' });
+  assert.deepEqual(full.map((o) => o.id).sort(), ['d_first', 'd_last', 'd_mid']);
+
+  // Lone `from`: lower-bounded, open on the top.
+  const fromOnly = await ordersRepository.listByMerchant('m_date', { from: '2026-03-15' });
+  assert.deepEqual(fromOnly.map((o) => o.id).sort(), ['d_last', 'd_mid', 'd_next']);
+
+  // Lone `to`: upper-bounded (inclusive of the to-day), open at the bottom.
+  const toOnly = await ordersRepository.listByMerchant('m_date', { to: '2026-03-01' });
+  assert.deepEqual(toOnly.map((o) => o.id), ['d_first']);
 });
